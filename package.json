@@ -1,0 +1,48 @@
+{
+	"name": "caiquearaujo/subtitle-ai-translator",
+	"private": true,
+	"version": "0.1.0",
+	"type": "module",
+	"description": "AI subtitle translator.",
+	"author": "caiquearaujo",
+	"license": "MIT",
+	"homepage": "https://github.com/caiquearaujo/subtitle-ai-translator#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/caiquearaujo/subtitle-ai-translator.git"
+	},
+	"bugs": {
+		"url": "https://github.com/caiquearaujo/subtitle-ai-translator/issues"
+	},
+	"scripts": {
+		"pre:commit": "npm run format && npm run lint && npm run check",
+		"prebuild": "npm run format && npm run lint && npm run check && npm run test:build",
+		"build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && node ./fixPackages.config.cjs",
+		"check": "tsc --noEmit -p tsconfig.json",
+		"format": "prettier --write \"src/**/*.ts\"",
+		"lint": "eslint --fix src/**/* --no-error-on-unmatched-pattern"
+	},
+	"devDependencies": {
+		"@types/debug": "^4.1.12",
+		"@types/node": "^24.3.0",
+		"@typescript-eslint/parser": "^8.41.0",
+		"@zerollup/ts-transform-paths": "^1.7.18",
+		"eslint": "^9.34.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-import-resolver-typescript": "^4.4.4",
+		"eslint-plugin-import": "^2.32.0",
+		"eslint-plugin-perfectionist": "^4.15.0",
+		"eslint-plugin-prettier": "^5.5.4",
+		"prettier": "^3.6.2",
+		"ts-node": "^10.9.2",
+		"tsc-alias": "^1.8.16",
+		"tsconfig-paths": "^4.2.0",
+		"tslib": "^2.8.1",
+		"tsx": "^4.20.5",
+		"typescript": "^5.9.2",
+		"typescript-eslint": "^8.41.0"
+	},
+	"dependencies": {
+		"debug": "^4.4.1"
+	}
+}

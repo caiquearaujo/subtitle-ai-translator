@@ -1,0 +1,21 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Main (TSX + Watch)",
+			"program": "${workspaceFolder}/node_modules/tsx/dist/cli.mjs",
+			"args": ["watch", "./src/index.ts"],
+			"env": { "DEBUG": "app*", "NODE_ENV": "development" },
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"skipFiles": ["<node_internals>/**"],
+			"resolveSourceMapLocations": [
+				"${workspaceFolder}/**",
+				"!**/node_modules/**"
+			],
+			"stopOnEntry": false
+		},
+	]
+}

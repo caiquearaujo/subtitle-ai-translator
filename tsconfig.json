@@ -1,0 +1,54 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "nodenext",
+		"strict": true,
+		"declaration": true,
+		"declarationDir": "./build/types",
+		"noUnusedLocals": true,
+		"noUnusedParameters": false,
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
+		"importHelpers": true,
+		"moduleResolution": "nodenext",
+		"experimentalDecorators": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
+		"allowJs": false,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"baseUrl": ".",
+		"rootDir": ".",
+		"outDir": "./build",
+		"paths": {
+			"@/*": ["src/*"]
+		},
+		"plugins": [
+			{
+				"transform": "@zerollup/ts-transform-paths",
+				"exclude": ["*"]
+			}
+		],
+		"lib": ["esnext"],
+		"typeRoots": ["<rootDir>/src/types", "node_modules/@types"],
+		"types": ["node"]
+	},
+	"include": [
+		"./*.d.ts",
+		"./**/*.d.ts",
+		"./src/**/*",
+		"./.debug/**/*",
+	],
+	"exclude": [
+		"./node_modules/**/*",
+		"./build/**/*",
+	],
+	"ts-node": {
+		"require": ["tsconfig-paths/register"],
+		"files": true
+	},
+	"tsc-alias": {
+		"resolveFullPaths": true
+	}
+}

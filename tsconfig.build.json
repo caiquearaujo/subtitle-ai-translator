@@ -1,0 +1,46 @@
+{
+	"compilerOptions": {
+		"target": "esnext",
+		"module": "nodenext",
+		"strict": true,
+		"declaration": false,
+		"emitDeclarationOnly": false,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"importHelpers": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"moduleResolution": "nodenext",
+		"experimentalDecorators": true,
+		"esModuleInterop": true,
+		"allowSyntheticDefaultImports": true,
+		"sourceMap": true,
+		"allowJs": false,
+		"resolveJsonModule": true,
+		"forceConsistentCasingInFileNames": true,
+		"skipLibCheck": true,
+		"baseUrl": ".",
+		"rootDir": "./src",
+		"outDir": "./build",
+		"paths": {
+			"@/*": ["src/*"]
+		},
+		"plugins": [
+			{
+				"transform": "@zerollup/ts-transform-paths",
+				"exclude": ["*"]
+			}
+		],
+		"lib": ["esnext"],
+		"typeRoots": ["<rootDir>/src/types", "node_modules/@types"],
+		"types": ["node"]
+	},
+	"include": ["./*.d.ts", "./src/**/*"],
+	"exclude": [
+		"./node_modules/**/*",
+		"./build/**/*"
+	],
+	"tsc-alias": {
+		"resolveFullPaths": true
+	}
+}

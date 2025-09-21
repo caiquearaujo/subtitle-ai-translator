@@ -3,9 +3,10 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import debug from 'debug';
 
+import ParseSubtitleAction from '@/translate/actions/ParseSubtitleAction.js';
 import ParseOptionsAction from '@/translate/actions/ParseOptionsAction.js';
 
-const GenerateAppKeysCommand = (program: Command) => {
+const TranslateCommand = (program: Command) => {
 	program
 		.command('translate')
 		.description('Translate a STR file to an specific language.')
@@ -27,6 +28,9 @@ const GenerateAppKeysCommand = (program: Command) => {
 				const options = ParseOptionsAction(op);
 				debug('cmd')('Translate Options: %o', options);
 
+				const lines = ParseSubtitleAction(options);
+				debug('cmd')('Subtitle Lines: %o', lines);
+
 				process.exit(0);
 			} catch (error: any) {
 				console.error(chalk.red(error.message));
@@ -35,4 +39,4 @@ const GenerateAppKeysCommand = (program: Command) => {
 		});
 };
 
-export default GenerateAppKeysCommand;
+export default TranslateCommand;

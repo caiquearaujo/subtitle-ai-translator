@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import z from 'zod';
 
-import type { PathResolution } from '@/types/index.js';
+import type { TranslateOptions } from '@/types/index.js';
 
 import { resolveAbspath } from '@/utils/index.js';
 
@@ -14,14 +14,7 @@ import { resolveAbspath } from '@/utils/index.js';
  * @since 1.0.0
  * @author Caique Araujo <caique@piggly.com.br>
  */
-const ParseOptionsAction = (
-	op: any,
-): {
-	break: number;
-	output: PathResolution;
-	source: PathResolution;
-	target: string;
-} => {
+const ParseOptionsAction = (op: any): TranslateOptions => {
 	try {
 		const parsed = z
 			.object({
@@ -30,7 +23,7 @@ const ParseOptionsAction = (
 					.int({ message: 'Break length must be an integer.' })
 					.positive({ message: 'Break length must be a positive number.' })
 					.optional()
-					.default(32),
+					.default(42),
 				output: z
 					.string({ message: 'Output path is required.' })
 					.optional(),

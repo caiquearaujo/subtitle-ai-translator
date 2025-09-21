@@ -160,4 +160,6 @@ $RECYCLE.BIN/
 *.yaml
 *.yml
 
+/debug
+
 # End of https://www.toptal.com/developers/gitignore/api/linux,macos,react,dotenv,nextjs,windows,visualstudiocode

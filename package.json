@@ -1,7 +1,7 @@
 {
 	"name": "caiquearaujo/subtitle-ai-translator",
 	"private": true,
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"type": "module",
 	"description": "AI subtitle translator.",
 	"author": "caiquearaujo",
@@ -14,9 +14,12 @@
 	"bugs": {
 		"url": "https://github.com/caiquearaujo/subtitle-ai-translator/issues"
 	},
+	"bin": {
+		"subsrt": "./build/index.js"
+	},
 	"scripts": {
 		"pre:commit": "npm run format && npm run lint && npm run check",
-		"prebuild": "npm run format && npm run lint && npm run check && npm run test:build",
+		"prebuild": "npm run format && npm run lint && npm run check",
 		"build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && node ./fixPackages.config.cjs",
 		"check": "tsc --noEmit -p tsconfig.json",
 		"format": "prettier --write \"src/**/*.ts\"",

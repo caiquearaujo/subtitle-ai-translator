@@ -34,16 +34,8 @@
 		"typeRoots": ["<rootDir>/src/types", "node_modules/@types"],
 		"types": ["node"]
 	},
-	"include": [
-		"./*.d.ts",
-		"./**/*.d.ts",
-		"./src/**/*",
-		"./.debug/**/*",
-	],
-	"exclude": [
-		"./node_modules/**/*",
-		"./build/**/*",
-	],
+	"include": ["./*.d.ts", "./**/*.d.ts", "./src/**/*", "./debug/**/*"],
+	"exclude": ["./node_modules/**/*", "./build/**/*"],
 	"ts-node": {
 		"require": ["tsconfig-paths/register"],
 		"files": true

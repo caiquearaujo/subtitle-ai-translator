@@ -16,7 +16,7 @@ import type { TranslateOptions } from '@/types/index.js';
  */
 const ParseSubtitleAction = (options: TranslateOptions): Array<NodeCue> => {
 	try {
-		const source = fs.readFileSync(options.source.abspath, 'utf8');
+		const source = fs.readFileSync(options.cmd.source.abspath, 'utf8');
 		const raw = parseSync(source);
 		const cues: Array<NodeCue> = [];
 

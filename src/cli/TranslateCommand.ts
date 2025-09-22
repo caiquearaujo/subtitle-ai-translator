@@ -1,10 +1,16 @@
 /* eslint-disable no-console */
+import { writeFile } from 'node:fs/promises';
+
+import { stringifySync } from 'subtitle';
 import { Command } from 'commander';
+import OpenAI from 'openai';
 import chalk from 'chalk';
 import debug from 'debug';
 
+import PostprocessingCuesAction from '@/translate/actions/PostprocessingCuesAction.js';
 import ParseSubtitleAction from '@/translate/actions/ParseSubtitleAction.js';
 import ParseOptionsAction from '@/translate/actions/ParseOptionsAction.js';
+import TranslateCueAction from '@/translate/actions/TranslateCueAction.js';
 
 const TranslateCommand = (program: Command) => {
 	program
@@ -28,8 +34,23 @@ const TranslateCommand = (program: Command) => {
 				const options = ParseOptionsAction(op);
 				debug('cmd')('Translate Options: %o', options);
 
+				const openai = new OpenAI({
+					apiKey: options.app.api_key,
+				});
+
 				const lines = ParseSubtitleAction(options);
 				debug('cmd')('Subtitle Lines: %o', lines);
+
+				const translated = await TranslateCueAction(options, lines, openai);
+				debug('cmd')('Translated Lines: %o', translated);
+
+				const postprocessed = PostprocessingCuesAction(options, translated);
+				debug('cmd')('Postprocessed Lines: %o', postprocessed);
+
+				await writeFile(
+					options.cmd.output.abspath,
+					stringifySync(postprocessed, { format: 'SRT' }),
+				);
 
 				process.exit(0);
 			} catch (error: any) {

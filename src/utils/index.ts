@@ -1,6 +1,7 @@
 import type { NodeCue } from 'subtitle';
 import type OpenAI from 'openai';
 
+import { writeFile, unlink } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -120,6 +121,90 @@ export const loadConfigIni = () => {
 	);
 
 	return config;
+};
+
+/**
+ * Try to load a checkpoint file.
+ *
+ * Returns the saved output cues if present and compatible.
+ *
+ * @param checkpoint_path - The checkpoint path.
+ * @param match - The match to load.
+ * @returns The loaded checkpoint.
+ * @since 1.0.0
+ * @author Caique Araujo <caique@piggly.com.br>
+ */
+export const loadCheckpoint = (
+	options: TranslateOptions,
+	match?: Partial<{ source: string; target: string }>,
+): Array<NodeCue> => {
+	try {
+		if (!fs.existsSync(options.cmd.checkpoint)) {
+			return [];
+		}
+
+		const raw = fs.readFileSync(options.cmd.checkpoint, 'utf8');
+		const json = JSON.parse(raw);
+
+		if (
+			match &&
+			((match.source && json?.meta?.source !== match.source) ||
+				(match.target && json?.meta?.target !== match.target))
+		) {
+			return [];
+		}
+
+		return Array.isArray(json?.output) ? (json.output as Array<NodeCue>) : [];
+	} catch {
+		return [];
+	}
+};
+
+/**
+ * Save the current output into a checkpoint file.
+ *
+ * @param file - The file to save.
+ * @param options - The options to save.
+ * @param output - The output to save.
+ * @param next_index - The next index to save.
+ * @since 1.0.0
+ * @author Caique Araujo <caique@piggly.com.br>
+ */
+export const saveCheckpoint = async (
+	file: string,
+	options: TranslateOptions,
+	output: Array<NodeCue>,
+	next_index: number,
+) => {
+	await writeFile(
+		file,
+		JSON.stringify({
+			meta: {
+				next_index,
+				source: options.cmd.source.abspath,
+				target: options.cmd.target,
+			},
+			output,
+			version: 1,
+		}),
+	);
+};
+
+/**
+ * Remove a file if it exists.
+ *
+ * @param file - The file to remove.
+ * @since 1.0.0
+ * @author Caique Araujo <caique@piggly.com.br>
+ */
+export const removeFile = async (file: string) => {
+	try {
+		if (fs.existsSync(file)) {
+			await unlink(file);
+		}
+	} catch {
+		// ignore
+	}
 };
 
 /**

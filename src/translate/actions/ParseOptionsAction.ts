@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+import path from 'node:path';
+
 import chalk from 'chalk';
 import z from 'zod';
 
@@ -34,6 +36,12 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 						.string({ message: 'OpenAI model is required.' })
 						.optional()
 						.default('gpt-5-mini'),
+					reasoning: z
+						.enum(['minimal', 'medium', 'high', 'low'], {
+							message: 'Reasoning must be a valid reasoning level.',
+						})
+						.optional()
+						.default('low'),
 					temperature: z.coerce
 						.number({ message: 'Temperature must be a number.' })
 						.min(0, { message: 'Temperature must be greater than 0.' })
@@ -92,9 +100,14 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 				api_key: parsed.data.app.api_key,
 				break: parsed.data.app.break,
 				model: parsed.data.app.model,
+				reasoning: parsed.data.app.reasoning,
 				temperature: parsed.data.app.temperature,
 			},
 			cmd: {
+				checkpoint: path.resolve(
+					output.path,
+					`${output.filename}.checkpoint.json`,
+				),
 				output: output,
 				source: source,
 				target: parsed.data.cmd.target,

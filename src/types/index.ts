@@ -3,9 +3,11 @@ export type TranslateOptions = {
 		api_key: string;
 		break: number;
 		model: string;
+		reasoning: 'minimal' | 'medium' | 'high' | 'low';
 		temperature: number;
 	};
 	cmd: {
+		checkpoint: string;
 		output: PathResolution;
 		source: PathResolution;
 		target: string;

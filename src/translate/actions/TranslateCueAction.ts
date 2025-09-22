@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type { NodeCue } from 'subtitle';
 import type OpenAI from 'openai';
 
@@ -8,9 +7,10 @@ import debug from 'debug';
 import type { TranslateOptions } from '@/types/index.js';
 
 import {
-	translationPrompt,
 	loadCheckpoint,
 	saveCheckpoint,
+	renderProgress,
+	getCompletion,
 	removeFile,
 } from '@/utils/index.js';
 
@@ -29,37 +29,32 @@ const TranslateCueAction = async (
 	subtitle: Array<NodeCue>,
 	openai: OpenAI,
 ): Promise<Array<NodeCue>> => {
-	const output: Array<NodeCue> = loadCheckpoint(options, {
+	const { output, progress } = loadCheckpoint(options, subtitle, {
 		source: options.cmd.source.abspath,
 		target: options.cmd.target,
 	});
 
+	// @note bootstrap the progress
+	renderProgress(progress, true);
+
 	if (output.length > 0) {
-		console.info(
-			chalk.yellow(
-				`Resuming from checkpoint (${output.length}/${subtitle.length}) at ${options.cmd.checkpoint}`,
-			),
-		);
+		progress.status = chalk.yellow(`Resuming from checkpoint`);
+		renderProgress(progress);
 	}
 
 	for (let i = output.length; i < subtitle.length; i++) {
+		progress.done = i + 1;
+
 		try {
 			const cue = subtitle[i];
-
-			const completion = await openai.chat.completions.create(
-				{
-					messages: translationPrompt(options, cue, {
-						next: subtitle?.[i + 1],
-						previous: output.slice(-4),
-					}),
-					model: options.app.model,
-					reasoning_effort: options.app.reasoning,
-					temperature: options.app.temperature,
-				},
-				{ timeout: 60000 },
+			const content = await getCompletion(
+				options,
+				openai,
+				subtitle,
+				output,
+				cue,
+				i,
 			);
-
-			const content = completion.choices[0].message.content;
 
 			if (!content) {
 				throw new Error('Failed to translate cue. No content returned.');
@@ -73,11 +68,10 @@ const TranslateCueAction = async (
 				type: 'cue',
 			});
 
-			if (i % 10 === 0) {
-				console.log(
-					`☑️ Line ${i + 1} of ${subtitle.length} (${Math.round(((i + 1) / subtitle.length) * 100)}%) translated.`,
-				);
+			debug('cmd')('Line %d of %d translated.', i + 1, subtitle.length);
+			debug('cmd')('Original: %s\nTranslated: %s', cue.data.text, content);
 
+			if (i % 10 === 0) {
 				await saveCheckpoint(
 					options.cmd.checkpoint,
 					options,
@@ -85,20 +79,26 @@ const TranslateCueAction = async (
 					i + 1,
 				);
 
+				progress.status = chalk.yellow(`Progress saved to checkpoint`);
+				renderProgress(progress);
+
 				debug('cmd')(
 					'Progress saved to checkpoint at %s',
 					options.cmd.checkpoint,
 				);
+
+				continue;
 			}
 
-			debug('cmd')('Line %d of %d translated.', i + 1, subtitle.length);
-			debug('cmd')('Original: %s\nTranslated: %s', cue.data.text, content);
-
 			// wait for 50ms to avoid rate limit
-			await new Promise(resolve => setTimeout(resolve, 50));
+			await new Promise(resolve => setTimeout(resolve, 100));
+
+			renderProgress(progress);
 		} catch (error: any) {
-			console.error(chalk.red('❌ Failed to translate cue.'));
-			console.error(chalk.red(error.message));
+			progress.status = chalk.red(
+				`❌  Failed to translate cue: ${error.message}`,
+			);
+			renderProgress(progress);
 
 			try {
 				await saveCheckpoint(
@@ -107,6 +107,9 @@ const TranslateCueAction = async (
 					output,
 					Math.min(output.length, subtitle.length),
 				);
+
+				progress.status = chalk.yellow(`Progress saved to checkpoint`);
+				renderProgress(progress);
 			} catch {
 				// ignore
 			}
@@ -116,6 +119,9 @@ const TranslateCueAction = async (
 	}
 
 	await removeFile(options.cmd.checkpoint);
+	progress.status = chalk.green(`Completed`);
+	renderProgress(progress);
+
 	return output;
 };
 

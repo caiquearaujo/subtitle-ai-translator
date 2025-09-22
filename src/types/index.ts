@@ -14,6 +14,14 @@ export type TranslateOptions = {
 	};
 };
 
+export type Progress = {
+	done: number;
+	onFlush?: () => void;
+	start_time: number;
+	status?: string;
+	total: number;
+};
+
 export type PathResolution = {
 	abspath: string;
 	extension: string;

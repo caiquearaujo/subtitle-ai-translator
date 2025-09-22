@@ -41,6 +41,21 @@ const TranslateCommand = (program: Command) => {
 				const lines = ParseSubtitleAction(options);
 				debug('cmd')('Subtitle Lines: %o', lines);
 
+				console.log(
+					chalk.yellow('Subtitle File:'),
+					chalk.white(options.cmd.source.abspath),
+				);
+				console.log(
+					chalk.yellow('Target Language:'),
+					chalk.white(options.cmd.target),
+				);
+				console.log(
+					chalk.yellow('Output File:'),
+					chalk.white(options.cmd.output.abspath),
+				);
+
+				console.log('\n');
+
 				const translated = await TranslateCueAction(options, lines, openai);
 				debug('cmd')('Translated Lines: %o', translated);
 

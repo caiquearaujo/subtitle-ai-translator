@@ -175,19 +175,17 @@ class ProgressService {
 			return;
 		}
 
-		const ratio =
-			this._progress.total > 0
-				? this._progress.done / this._progress.total
-				: 0;
+		const _done = this._progress.done + 1;
+
+		const ratio = this._progress.total > 0 ? _done / this._progress.total : 0;
 		const percentage = Math.round(ratio * 100);
 		const elapsed = Date.now() - this._progress.start_time;
 		const eta =
-			this._progress.done > 0
-				? (elapsed / this._progress.done) *
-					(this._progress.total - this._progress.done)
+			_done > 0
+				? (elapsed / _done) * (this._progress.total - _done)
 				: Number.POSITIVE_INFINITY;
 
-		const prefix = `${this._progress.done + 1} of ${this._progress.total} ${String(percentage).padStart(3)}%`;
+		const prefix = `${_done} of ${this._progress.total} ${String(percentage).padStart(3)}%`;
 		const suffix = `${chalk.dim('ETA')} ${this._displayDuration(eta)}`;
 		const bar = this._displayProgress(
 			ratio,

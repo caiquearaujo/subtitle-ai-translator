@@ -5,12 +5,8 @@ import debug from 'debug';
 
 import type { TranslateOptions } from '@/types/index.js';
 
-import {
-	loadCheckpoint,
-	saveCheckpoint,
-	renderProgress,
-	removeFile,
-} from '@/utils/index.js';
+import CheckpointService from '@/services/CheckpointService.js';
+import ProgressService from '@/services/ProgressService.js';
 
 /**
  * Translate the cue.
@@ -26,22 +22,22 @@ const TranslateCueAction = async (
 	options: TranslateOptions,
 	subtitle: Array<NodeCue>,
 ): Promise<Array<NodeCue>> => {
-	const { output, progress } = loadCheckpoint(options, subtitle, {
+	const checkpoint = new CheckpointService(options);
+	const progress = new ProgressService(options);
+
+	const output = checkpoint.load({
 		source: options.cmd.source.abspath,
 		target: options.cmd.target,
 	});
 
 	// @note bootstrap the progress
-	renderProgress(progress, true);
+	progress.bootstrap(subtitle.length);
 
 	if (output.length > 0) {
-		progress.status = chalk.yellow(`Resuming from checkpoint`);
-		renderProgress(progress);
+		progress.status(chalk.yellow(`Resuming from checkpoint`));
 	}
 
 	for (let i = output.length; i < subtitle.length; i++) {
-		progress.done = i + 1;
-
 		try {
 			const cue = subtitle[i];
 			const content = await options.app.service.process(i, subtitle, output);
@@ -58,19 +54,11 @@ const TranslateCueAction = async (
 				type: 'cue',
 			});
 
-			debug('cmd')('Line %d of %d translated.', i + 1, subtitle.length);
-			debug('cmd')('Original: %s\nTranslated: %s', cue.data.text, content);
+			options.app.log.line(i, subtitle.length, cue.data.text, content);
 
 			if (i % 10 === 0) {
-				await saveCheckpoint(
-					options.cmd.checkpoint,
-					options,
-					output,
-					i + 1,
-				);
-
-				progress.status = chalk.yellow(`Progress saved to checkpoint`);
-				renderProgress(progress);
+				await checkpoint.save(output, i + 1);
+				progress.status(chalk.yellow(`Progress saved to checkpoint`));
 
 				debug('cmd')(
 					'Progress saved to checkpoint at %s',
@@ -83,34 +71,30 @@ const TranslateCueAction = async (
 			// wait for 50ms to avoid rate limit
 			await new Promise(resolve => setTimeout(resolve, 100));
 
-			renderProgress(progress);
+			progress.step(i);
 		} catch (error: any) {
-			progress.status = chalk.red(
-				`❌  Failed to translate cue: ${error.message}`,
+			progress.status(
+				chalk.red(`❌  Failed to translate cue: ${error.message}`),
 			);
-			renderProgress(progress);
 
 			try {
-				await saveCheckpoint(
-					options.cmd.checkpoint,
-					options,
+				await checkpoint.save(
 					output,
 					Math.min(output.length, subtitle.length),
 				);
 
-				progress.status = chalk.yellow(`Progress saved to checkpoint`);
-				renderProgress(progress);
+				progress.status(chalk.yellow(`Progress saved to checkpoint`));
 			} catch {
 				// ignore
 			}
 
+			options.app.log.debug(error);
 			process.exit(1);
 		}
 	}
 
-	await removeFile(options.cmd.checkpoint);
-	progress.status = chalk.green(`Completed`);
-	renderProgress(progress);
+	await checkpoint.remove();
+	progress.status(chalk.green(`Completed`));
 
 	return output;
 };

@@ -2,8 +2,10 @@ import { NodeCue } from 'subtitle';
 import { OpenAI } from 'openai';
 import z from 'zod';
 
-import { LLMService } from '@/services/types/index.js';
-import { translationPrompt } from '@/utils/index.js';
+import type { LLMService } from '@/services/types/index.js';
+import type LogService from '@/services/LogService.js';
+
+import BaseLLMService from '@/services/BaseLLMService.js';
 
 export type OpenAiOptions = {
 	api_key: string;
@@ -13,7 +15,7 @@ export type OpenAiOptions = {
 	timeout: number;
 };
 
-class OpenAiLLMService implements LLMService {
+class OpenAiLLMService extends BaseLLMService implements LLMService {
 	/**
 	 * The OpenAI instance.
 	 *
@@ -31,14 +33,6 @@ class OpenAiLLMService implements LLMService {
 	protected _options: OpenAiOptions;
 
 	/**
-	 * The target language.
-	 *
-	 * @since 1.0.0
-	 * @author Caique Araujo <caique@piggly.com.br>
-	 */
-	protected _target_language: string;
-
-	/**
 	 * The name of the service.
 	 *
 	 * @since 1.0.0
@@ -53,7 +47,13 @@ class OpenAiLLMService implements LLMService {
 	 * @since 1.0.0
 	 * @author Caique Araujo <caique@piggly.com.br>
 	 */
-	constructor(options: OpenAiOptions, target_language: string) {
+	constructor(
+		options: OpenAiOptions,
+		target_language: string,
+		log: LogService,
+	) {
+		super(target_language, log);
+
 		this._options = z
 			.object({
 				api_key: z.string({ message: 'OpenAI API key is required.' }),
@@ -83,8 +83,6 @@ class OpenAiLLMService implements LLMService {
 		this._openai = new OpenAI({
 			apiKey: this._options.api_key,
 		});
-
-		this._target_language = target_language;
 	}
 
 	/**
@@ -104,14 +102,10 @@ class OpenAiLLMService implements LLMService {
 	): Promise<string | null> {
 		const completion = await this._openai.chat.completions.create(
 			{
-				messages: translationPrompt(
-					this._target_language,
-					subtitle[index],
-					{
-						next: subtitle?.[index + 1],
-						previous: output.slice(-4),
-					},
-				),
+				messages: this._translationPrompt(subtitle[index], {
+					next: subtitle?.[index + 1],
+					previous: output.slice(-4),
+				}),
 				model: this._options.model,
 				reasoning_effort: this._options.reasoning,
 				temperature: this._options.temperature,

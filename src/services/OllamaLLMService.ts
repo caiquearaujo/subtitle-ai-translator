@@ -2,16 +2,19 @@ import { NodeCue } from 'subtitle';
 import { Ollama } from 'ollama';
 import z from 'zod';
 
-import { LLMService } from '@/services/types/index.js';
-import { translationPrompt } from '@/utils/index.js';
+import type { LLMService } from '@/services/types/index.js';
+import type LogService from '@/services/LogService.js';
+
+import BaseLLMService from '@/services/BaseLLMService.js';
 
 export type OllamaOptions = {
 	host: string;
 	model: string;
-	reasoning: 'medium' | 'high' | 'low' | 'off';
+	reasoning: boolean;
+	temperature: number;
 };
 
-class OllamaLLMService implements LLMService {
+class OllamaLLMService extends BaseLLMService implements LLMService {
 	/**
 	 * The Ollama instance.
 	 *
@@ -29,14 +32,6 @@ class OllamaLLMService implements LLMService {
 	protected _options: OllamaOptions;
 
 	/**
-	 * The target language.
-	 *
-	 * @since 1.0.0
-	 * @author Caique Araujo <caique@piggly.com.br>
-	 */
-	protected _target_language: string;
-
-	/**
 	 * The name of the service.
 	 *
 	 * @since 1.0.0
@@ -51,7 +46,13 @@ class OllamaLLMService implements LLMService {
 	 * @since 1.0.0
 	 * @author Caique Araujo <caique@piggly.com.br>
 	 */
-	constructor(options: OllamaOptions, target_language: string) {
+	constructor(
+		options: OllamaOptions,
+		target_language: string,
+		log: LogService,
+	) {
+		super(target_language, log);
+
 		this._options = z
 			.object({
 				host: z
@@ -63,20 +64,22 @@ class OllamaLLMService implements LLMService {
 					.string({ message: 'Ollama model is required.' })
 					.optional()
 					.default('aya:8b'),
-				reasoning: z
-					.enum(['medium', 'high', 'low', 'off'], {
-						message: 'Reasoning must be a valid reasoning level.',
-					})
+				reasoning: z.coerce
+					.boolean({ message: 'Reasoning must be a boolean.' })
 					.optional()
-					.default('off'),
+					.default(false),
+				temperature: z.coerce
+					.number({ message: 'Temperature must be a number.' })
+					.min(0, { message: 'Temperature must be greater than 0.' })
+					.max(1, { message: 'Temperature must be less than 1.' })
+					.optional()
+					.default(0.3),
 			})
 			.parse(options);
 
 		this._ollama = new Ollama({
 			host: this._options.host,
 		});
-
-		this._target_language = target_language;
 	}
 
 	/**
@@ -95,13 +98,13 @@ class OllamaLLMService implements LLMService {
 		output: Array<NodeCue>,
 	): Promise<string | null> {
 		const completion = await this._ollama.chat({
-			messages: translationPrompt(this._target_language, subtitle[index], {
+			messages: this._translationPrompt(subtitle[index], {
 				next: subtitle?.[index + 1],
 				previous: output.slice(-4),
 			}),
 			model: this._options.model,
-			think:
-				this._options.reasoning === 'off' ? false : this._options.reasoning,
+			options: { temperature: this._options.temperature },
+			think: this._options.reasoning,
 		});
 
 		return completion.message.content;

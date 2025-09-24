@@ -1,8 +1,13 @@
 import type { LLMService } from '@/services/types/index.js';
 
+import LogService from '@/services/LogService.js';
+
 export type TranslateOptions = {
 	app: {
 		break: number;
+		checkpoint: boolean;
+		debug: boolean;
+		log: LogService;
 		service: LLMService;
 	};
 	cmd: {

@@ -10,6 +10,7 @@ import type { LLMService } from '@/services/types/index.js';
 import { resolveAbspath, loadConfigIni } from '@/utils/index.js';
 import OpenAiLLMService from '@/services/OpenAiLLMService.js';
 import OllamaLLMService from '@/services/OllamaLLMService.js';
+import LogService from '@/services/LogService.js';
 
 /**
  * Solve the service.
@@ -21,14 +22,15 @@ import OllamaLLMService from '@/services/OllamaLLMService.js';
  */
 const SolveService = (
 	service: SupportedServices,
-	config: Record<string, any>,
 	target_language: string,
+	log: LogService,
+	config: Record<string, any>,
 ): LLMService => {
 	if (service === 'openai') {
-		return new OpenAiLLMService(config.openai, target_language);
+		return new OpenAiLLMService(config.openai, target_language, log);
 	}
 
-	return new OllamaLLMService(config.ollama, target_language);
+	return new OllamaLLMService(config.ollama, target_language, log);
 };
 
 /**
@@ -55,6 +57,10 @@ const DisplayOptions = (options: TranslateOptions) => {
 		chalk.yellow('Output File:'),
 		chalk.white(options.cmd.output.abspath),
 	);
+
+	if (options.app.debug) {
+		console.log(chalk.blue('Debug mode enabled'));
+	}
 };
 
 /**
@@ -80,6 +86,8 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 						})
 						.optional()
 						.default(42),
+					checkpoint: z.coerce.boolean().optional().default(false),
+					debug: z.coerce.boolean().optional().default(false),
 					service: z
 						.enum(['openai', 'ollama'], {
 							message: 'LLM service is required.',
@@ -133,13 +141,19 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 			output.abspath = _output.abspath;
 		}
 
+		const log = new LogService(parsed.data.app.debug);
+
 		const opts = {
 			app: {
 				break: parsed.data.app.break,
+				checkpoint: parsed.data.app.checkpoint,
+				debug: parsed.data.app.debug,
+				log: log,
 				service: SolveService(
 					parsed.data.app.service,
-					config,
 					parsed.data.cmd.target,
+					log,
+					config,
 				),
 			},
 			cmd: {
@@ -152,6 +166,7 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 				target: parsed.data.cmd.target,
 			},
 		};
+
 		DisplayOptions(opts);
 
 		return opts;

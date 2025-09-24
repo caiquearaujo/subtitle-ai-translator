@@ -3,7 +3,6 @@ import { writeFile } from 'node:fs/promises';
 
 import { stringifySync } from 'subtitle';
 import { Command } from 'commander';
-import OpenAI from 'openai';
 import chalk from 'chalk';
 import debug from 'debug';
 
@@ -34,29 +33,12 @@ const TranslateCommand = (program: Command) => {
 				const options = ParseOptionsAction(op);
 				debug('cmd')('Translate Options: %o', options);
 
-				const openai = new OpenAI({
-					apiKey: options.app.api_key,
-				});
-
 				const lines = ParseSubtitleAction(options);
 				debug('cmd')('Subtitle Lines: %o', lines);
 
-				console.log(
-					chalk.yellow('Subtitle File:'),
-					chalk.white(options.cmd.source.abspath),
-				);
-				console.log(
-					chalk.yellow('Target Language:'),
-					chalk.white(options.cmd.target),
-				);
-				console.log(
-					chalk.yellow('Output File:'),
-					chalk.white(options.cmd.output.abspath),
-				);
-
 				console.log('\n');
 
-				const translated = await TranslateCueAction(options, lines, openai);
+				const translated = await TranslateCueAction(options, lines);
 				debug('cmd')('Translated Lines: %o', translated);
 
 				const postprocessed = PostprocessingCuesAction(options, translated);

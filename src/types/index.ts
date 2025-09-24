@@ -1,10 +1,9 @@
+import type { LLMService } from '@/services/types/index.js';
+
 export type TranslateOptions = {
 	app: {
-		api_key: string;
 		break: number;
-		model: string;
-		reasoning: 'minimal' | 'medium' | 'high' | 'low';
-		temperature: number;
+		service: LLMService;
 	};
 	cmd: {
 		checkpoint: string;
@@ -28,3 +27,5 @@ export type PathResolution = {
 	filename: string;
 	path: string;
 };
+
+export type SupportedServices = 'openai' | 'ollama';

@@ -4,9 +4,58 @@ import path from 'node:path';
 import chalk from 'chalk';
 import z from 'zod';
 
-import type { TranslateOptions } from '@/types/index.js';
+import type { SupportedServices, TranslateOptions } from '@/types/index.js';
+import type { LLMService } from '@/services/types/index.js';
 
 import { resolveAbspath, loadConfigIni } from '@/utils/index.js';
+import OpenAiLLMService from '@/services/OpenAiLLMService.js';
+import OllamaLLMService from '@/services/OllamaLLMService.js';
+
+/**
+ * Solve the service.
+ *
+ * @param service - The service to solve.
+ * @param config - The config to solve.
+ * @param target_language - The target language to solve.
+ * @returns The solved service.
+ */
+const SolveService = (
+	service: SupportedServices,
+	config: Record<string, any>,
+	target_language: string,
+): LLMService => {
+	if (service === 'openai') {
+		return new OpenAiLLMService(config.openai, target_language);
+	}
+
+	return new OllamaLLMService(config.ollama, target_language);
+};
+
+/**
+ * Display the options.
+ *
+ * @param options - The options to display.
+ * @since 1.0.0
+ * @author Caique Araujo <caique@piggly.com.br>
+ */
+const DisplayOptions = (options: TranslateOptions) => {
+	console.log(
+		chalk.yellow('LLM Service:'),
+		chalk.white(options.app.service.name),
+	);
+	console.log(
+		chalk.yellow('Subtitle File:'),
+		chalk.white(options.cmd.source.abspath),
+	);
+	console.log(
+		chalk.yellow('Target Language:'),
+		chalk.white(options.cmd.target),
+	);
+	console.log(
+		chalk.yellow('Output File:'),
+		chalk.white(options.cmd.output.abspath),
+	);
+};
 
 /**
  * Parse the options.
@@ -23,7 +72,6 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 		const parsed = z
 			.object({
 				app: z.object({
-					api_key: z.string({ message: 'OpenAI API key is required.' }),
 					break: z.coerce
 						.number({ message: 'Break length must be a number.' })
 						.int({ message: 'Break length must be an integer.' })
@@ -32,22 +80,12 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 						})
 						.optional()
 						.default(42),
-					model: z
-						.string({ message: 'OpenAI model is required.' })
-						.optional()
-						.default('gpt-5-mini'),
-					reasoning: z
-						.enum(['minimal', 'medium', 'high', 'low'], {
-							message: 'Reasoning must be a valid reasoning level.',
+					service: z
+						.enum(['openai', 'ollama'], {
+							message: 'LLM service is required.',
 						})
 						.optional()
-						.default('low'),
-					temperature: z.coerce
-						.number({ message: 'Temperature must be a number.' })
-						.min(0, { message: 'Temperature must be greater than 0.' })
-						.max(1, { message: 'Temperature must be less than 1.' })
-						.optional()
-						.default(0.3),
+						.default('openai'),
 				}),
 				cmd: z.object({
 					output: z
@@ -95,13 +133,14 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 			output.abspath = _output.abspath;
 		}
 
-		return {
+		const opts = {
 			app: {
-				api_key: parsed.data.app.api_key,
 				break: parsed.data.app.break,
-				model: parsed.data.app.model,
-				reasoning: parsed.data.app.reasoning,
-				temperature: parsed.data.app.temperature,
+				service: SolveService(
+					parsed.data.app.service,
+					config,
+					parsed.data.cmd.target,
+				),
 			},
 			cmd: {
 				checkpoint: path.resolve(
@@ -113,6 +152,9 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 				target: parsed.data.cmd.target,
 			},
 		};
+		DisplayOptions(opts);
+
+		return opts;
 	} catch (error: any) {
 		console.error(chalk.red(error.message));
 		process.exit(1);

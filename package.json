@@ -51,6 +51,7 @@
 		"commander": "^14.0.1",
 		"debug": "^4.4.1",
 		"ini": "^5.0.0",
+		"ollama": "^0.5.18",
 		"openai": "^5.22.0",
 		"string-width": "^8.1.0",
 		"strip-ansi": "^7.1.2",

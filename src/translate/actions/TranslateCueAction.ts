@@ -1,5 +1,4 @@
 import type { NodeCue } from 'subtitle';
-import type OpenAI from 'openai';
 
 import chalk from 'chalk';
 import debug from 'debug';
@@ -10,7 +9,6 @@ import {
 	loadCheckpoint,
 	saveCheckpoint,
 	renderProgress,
-	getCompletion,
 	removeFile,
 } from '@/utils/index.js';
 
@@ -27,7 +25,6 @@ import {
 const TranslateCueAction = async (
 	options: TranslateOptions,
 	subtitle: Array<NodeCue>,
-	openai: OpenAI,
 ): Promise<Array<NodeCue>> => {
 	const { output, progress } = loadCheckpoint(options, subtitle, {
 		source: options.cmd.source.abspath,
@@ -47,14 +44,7 @@ const TranslateCueAction = async (
 
 		try {
 			const cue = subtitle[i];
-			const content = await getCompletion(
-				options,
-				openai,
-				subtitle,
-				output,
-				cue,
-				i,
-			);
+			const content = await options.app.service.process(i, subtitle, output);
 
 			if (!content) {
 				throw new Error('Failed to translate cue. No content returned.');

@@ -14,10 +14,20 @@ const InitCommand = (program: Command) => {
 			try {
 				const content = [
 					'[app]',
+					'break = 42',
+					'service = openai',
+					'',
+					'[openai]',
 					'model = gpt-5-mini',
 					'temperature = 0.3',
 					'api_key =',
-					'break = 42',
+					'reasoning = off',
+					'timeout = 60000',
+					'',
+					'[ollama]',
+					'model = aya:8b',
+					'reasoning = off',
+					'',
 				];
 
 				const file = path.resolve(

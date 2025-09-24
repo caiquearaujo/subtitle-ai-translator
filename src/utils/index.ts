@@ -1,5 +1,4 @@
 import type { NodeCue } from 'subtitle';
-import type OpenAI from 'openai';
 
 import { writeFile, unlink } from 'node:fs/promises';
 import readline from 'node:readline';
@@ -10,6 +9,7 @@ import fs from 'node:fs';
 import stringWidth from 'string-width';
 import stripAnsi from 'strip-ansi';
 import chalk from 'chalk';
+import debug from 'debug';
 import ini from 'ini';
 
 import type {
@@ -65,20 +65,20 @@ export const resolveAbspath = (abspath: string): PathResolution => {
  * @author Caique Araujo <caique@piggly.com.br>
  */
 export const translationPrompt = (
-	options: TranslateOptions,
+	target_language: string,
 	cue: NodeCue,
 	context?: Partial<{ next: NodeCue; previous: Array<NodeCue> }>,
-): Array<OpenAI.Chat.Completions.ChatCompletionMessageParam> => {
+): Array<{ content: string; role: 'system' | 'user' }> => {
 	const content = [
-		`Target language to translate to: ${options.cmd.target}`,
-		'Formality: neutral-informal',
+		`Target language to translate to: ${target_language}`,
+		'Formality: informal',
 		'Profanity policy: keep original intensity',
 		'\n',
 	];
 
 	if (context?.previous && context.previous.length > 0) {
 		content.push(
-			`CONTEXT (PREVIOUS LINES) >>> ${context.previous.map(p => p.data.text).join('\n')}`,
+			`CONTEXT (PREVIOUS LINES) >>> ${context.previous.map(p => p.data.text).join(' ')}`,
 		);
 	}
 
@@ -88,18 +88,19 @@ export const translationPrompt = (
 
 	content.push(`CURRENT LINE >>> ${cue.data.text}`);
 
-	const messages: Array<OpenAI.Chat.Completions.ChatCompletionMessageParam> = [
+	const messages: Array<{ content: string; role: 'system' | 'user' }> = [
 		{
 			content: [
 				'You are a professional subtitle/localization translator.',
 				'INPUT: The CURRENT LINE of subtitle text (no timestamps).',
 				'INPUT FORMAT: <meaning> >>> <line>',
 				'TASK: translate CURRENT LINE into the requested target locale in natural, idiomatic language.',
-				'Keep meaning, tone, and register; do not add explanations or metadata.',
-				'Preserve numbers, brand/character names, emojis, URLs, and placeholders such as {name} or markup such as <i>…</i>.',
+				'Keep meaning, tone and register; do not add explanations or metadata.',
+				'Preserve numbers, brand/character names, emojis, URLs, formatting, and placeholders such as {name} or markup such as <i>…</i>.',
 				'Respect any glossary/style notes present in chat history.',
 				'If context is provided in the user message, use it; otherwise prefer the most neutral reading.',
 				'Avoid to use unnatural or complex words when translating to target language. Keep it simple and natural.',
+				'Keep attention to the context to keep gender, references and consistency.',
 				'OUTPUT: only the translated line (single line), no quotes, no brackets, no extra text.',
 			].join('\n'),
 			role: 'system',
@@ -110,44 +111,8 @@ export const translationPrompt = (
 		},
 	];
 
+	debug('cmd')('Translation Prompt: %o', messages);
 	return messages;
-};
-
-/**
- * Get the completion.
- *
- * @param options - The options to get the completion.
- * @param openai - The openai to get the completion.
- * @param subtitle - The subtitle to get the completion.
- * @param output - The output to get the completion.
- * @param cue - The cue to get the completion.
- * @param i - The index to get the completion.
- * @returns The completion.
- * @since 1.0.0
- * @author Caique Araujo <caique@piggly.com.br>
- */
-export const getCompletion = async (
-	options: TranslateOptions,
-	openai: OpenAI,
-	subtitle: Array<NodeCue>,
-	output: Array<NodeCue>,
-	cue: NodeCue,
-	i: number,
-): Promise<string | null> => {
-	const completion = await openai.chat.completions.create(
-		{
-			messages: translationPrompt(options, cue, {
-				next: subtitle?.[i + 1],
-				previous: output.slice(-4),
-			}),
-			model: options.app.model,
-			reasoning_effort: options.app.reasoning,
-			temperature: options.app.temperature,
-		},
-		{ timeout: 60000 },
-	);
-
-	return completion.choices[0].message.content;
 };
 
 /**

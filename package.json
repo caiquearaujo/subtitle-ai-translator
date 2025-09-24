@@ -1,5 +1,5 @@
 {
-	"name": "@caiquearaujo/subtitle-ai-translator",
+	"name": "subtitle-ai-translator",
 	"version": "1.0.0",
 	"type": "module",
 	"description": "AI subtitle translator.",

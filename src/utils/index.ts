@@ -93,6 +93,43 @@ export const breakPosition = (text: string, break_len: number): number => {
 	return closest_position;
 };
 
+/**
+ * Wrap the line.
+ *
+ * @param input - The input to wrap.
+ * @param break_len - The break length.
+ * @returns The wrapped line.
+ * @since 1.0.0
+ * @author Caique Araujo <caique@piggly.com.br>
+ */
+export const wrapLine = (input: string, break_len: number): string => {
+	const text = (input ?? '')
+		.trim()
+		.replace(/\s+/g, ' ')
+		.replace(/\s+([—–])\s+/g, '\n$1');
+
+	const segments = text
+		.split('\n')
+		.map(s => s.trim())
+		.filter(Boolean);
+
+	const out: string[] = [];
+
+	for (const seg of segments) {
+		const break_position = breakPosition(seg, break_len);
+
+		if (break_position === -1) {
+			out.push(seg);
+			continue;
+		}
+
+		out.push(seg.slice(0, break_position));
+		out.push(seg.slice(break_position).trim());
+	}
+
+	return out.join('\n');
+};
+
 /** Application Progress */
 /**
  * Pad a number.

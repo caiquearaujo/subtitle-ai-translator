@@ -1,6 +1,5 @@
 {
-	"name": "caiquearaujo/subtitle-ai-translator",
-	"private": true,
+	"name": "@caiquearaujo/subtitle-ai-translator",
 	"version": "1.0.0",
 	"type": "module",
 	"description": "AI subtitle translator.",
@@ -17,13 +16,30 @@
 	"bin": {
 		"subsrt": "./build/index.js"
 	},
+	"files": [
+		"build",
+		"LICENSE",
+		"README.md"
+	],
+	"keywords": [
+		"subtitle",
+		"translator",
+		"ai",
+		"google",
+		"openai",
+		"ollama"
+	],
+	"engines": {
+		"node": ">=20"
+	},
 	"scripts": {
 		"pre:commit": "npm run format && npm run lint && npm run check",
 		"prebuild": "npm run format && npm run lint && npm run check",
 		"build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && node ./fixPackages.config.cjs",
 		"check": "tsc --noEmit -p tsconfig.json",
 		"format": "prettier --write \"src/**/*.ts\"",
-		"lint": "eslint --fix src/**/* --no-error-on-unmatched-pattern"
+		"lint": "eslint --fix src/**/* --no-error-on-unmatched-pattern",
+		"prepublishOnly": "npm run build"
 	},
 	"devDependencies": {
 		"@types/debug": "^4.1.12",

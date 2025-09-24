@@ -2,7 +2,7 @@ import type { NodeCue } from 'subtitle';
 
 import type { TranslateOptions } from '@/types/index.js';
 
-import { breakPosition } from '@/utils/index.js';
+import { wrapLine } from '@/utils/index.js';
 
 /**
  * Postprocessing the cues.
@@ -16,16 +16,7 @@ const PostprocessingCuesAction = (
 	cues: Array<NodeCue>,
 ): Array<NodeCue> => {
 	for (const cue of cues) {
-		const break_position = breakPosition(cue.data.text, options.app.break);
-
-		if (break_position === -1) {
-			continue;
-		}
-
-		cue.data.text = [
-			cue.data.text.slice(0, break_position),
-			cue.data.text.slice(break_position).trim(),
-		].join('\n');
+		cue.data.text = wrapLine(cue.data.text, options.app.break);
 	}
 
 	return cues;

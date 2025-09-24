@@ -24,10 +24,6 @@ const TranslateCommand = (program: Command) => {
 			'-o, --output <path>',
 			'Output path. Name will be the same as the source file, but with the target language code. If not provided, it will be saved in the same directory as the source file.',
 		)
-		.option(
-			'-b, --break <length>',
-			'Break the text into lines of the specified length.',
-		)
 		.action(async op => {
 			try {
 				const options = ParseOptionsAction(op);

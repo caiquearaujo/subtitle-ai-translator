@@ -33,4 +33,4 @@ export type PathResolution = {
 	path: string;
 };
 
-export type SupportedServices = 'openai' | 'ollama';
+export type SupportedServices = 'openai' | 'ollama' | 'google';

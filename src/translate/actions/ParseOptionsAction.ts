@@ -10,6 +10,7 @@ import type { LLMService } from '@/services/types/index.js';
 import { resolveAbspath, loadConfigIni } from '@/utils/index.js';
 import OpenAiLLMService from '@/services/OpenAiLLMService.js';
 import OllamaLLMService from '@/services/OllamaLLMService.js';
+import GoogleLLMService from '@/services/GoogleLLMService.js';
 import LogService from '@/services/LogService.js';
 
 /**
@@ -28,6 +29,10 @@ const SolveService = (
 ): LLMService => {
 	if (service === 'openai') {
 		return new OpenAiLLMService(config.openai, target_language, log);
+	}
+
+	if (service === 'google') {
+		return new GoogleLLMService(config.google, target_language, log);
 	}
 
 	return new OllamaLLMService(config.ollama, target_language, log);
@@ -89,7 +94,7 @@ const ParseOptionsAction = (op: any): TranslateOptions => {
 					checkpoint: z.coerce.boolean().optional().default(false),
 					debug: z.coerce.boolean().optional().default(false),
 					service: z
-						.enum(['openai', 'ollama'], {
+						.enum(['openai', 'ollama', 'google'], {
 							message: 'LLM service is required.',
 						})
 						.optional()

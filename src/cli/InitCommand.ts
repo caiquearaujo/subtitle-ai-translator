@@ -31,6 +31,11 @@ const InitCommand = (program: Command) => {
 					'reasoning = true',
 					'temperature = 0.3',
 					'',
+					'[google]',
+					'model = gemini-2.0-flash',
+					'temperature = 0.3',
+					'api_key =',
+					'',
 				];
 
 				const file = path.resolve(
